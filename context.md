@@ -1,4 +1,4 @@
-# Project Context: Stock News Aggregator (RSS-driven, Real-time UI)
+# Project Context: Share News Assembler (RSS-driven, Real-time UI)
 
 > Agentic Engineering Best Practices Addendum
 > This document serves as the shared contract between subagents and the orchestrator. Updates should be monotonic: append new decisions and resolved items; avoid deleting historical rationale unless superseded.

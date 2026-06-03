@@ -45,8 +45,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Stock News Aggregator",
-    description="RSS-driven stock news aggregator with real-time UI",
+    title="Share News Assembler",
+    description="RSS-driven share news assembler with real-time UI",
     version="1.0.0",
     lifespan=lifespan,
 )

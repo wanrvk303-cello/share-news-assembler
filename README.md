@@ -1,6 +1,6 @@
-# Stock News Aggregator
+# Share News Assembler
 
-RSS-driven stock news aggregator with real-time UI. Monitors finance RSS feeds and presents curated news items grouped by user holdings, individual stocks, or market-wide events.
+RSS-driven share news assembler with real-time UI. Monitors finance RSS feeds and presents curated news items grouped by user holdings, individual stocks, or market-wide events.
 
 ## Features
 

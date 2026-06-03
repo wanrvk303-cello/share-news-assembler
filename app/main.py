@@ -75,6 +75,11 @@ async def health_check():
     return {"status": "healthy", "version": "1.0.0"}
 
 
+@app.get("/api/version")
+async def get_version():
+    return {"version": "1.0.0", "poll_interval_minutes": settings.RSS_POLL_INTERVAL_MINUTES}
+
+
 @app.get("/api/stats")
 async def get_stats():
     from sqlalchemy import select, func

@@ -1,11 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 
 class HoldingCreate(BaseModel):
-    ticker: str
-    name: Optional[str] = None
+    ticker: str = Field(..., min_length=1, max_length=20, description="Stock ticker symbol")
+    name: Optional[str] = Field(None, max_length=200, description="Company name")
 
 
 class HoldingResponse(BaseModel):
@@ -19,11 +19,11 @@ class HoldingResponse(BaseModel):
 
 
 class HoldingUpdate(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(None, max_length=200, description="Company name")
 
 
 class UserCreate(BaseModel):
-    username: str
+    username: str = Field(..., min_length=1, max_length=100, description="Username")
 
 
 class UserResponse(BaseModel):

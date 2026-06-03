@@ -9,10 +9,10 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
     MAX_NEWS_PER_PAGE: int = 100
     DEFAULT_NEWS_PER_PAGE: int = 20
-    CORS_ORIGINS: list[str] = ["*"]
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
 settings = Settings()

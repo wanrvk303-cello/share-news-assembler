@@ -55,6 +55,7 @@ async def add_holding(user_id: int, data: HoldingCreate, db: AsyncSession = Depe
 
     ticker_upper = data.ticker.upper()
     if ticker_upper not in COMMON_TICKERS and not data.name:
+        logger.warning(f"Unknown ticker attempt: {ticker_upper}")
         raise HTTPException(
             status_code=400,
             detail=f"Unknown ticker '{ticker_upper}'. Provide a name or use a known ticker."
@@ -64,6 +65,7 @@ async def add_holding(user_id: int, data: HoldingCreate, db: AsyncSession = Depe
         select(Holding).where(Holding.user_id == user_id, Holding.ticker == ticker_upper)
     )
     if existing.scalar_one_or_none():
+        logger.warning(f"Duplicate holding attempt: user={user_id}, ticker={ticker_upper}")
         raise HTTPException(status_code=409, detail=f"Already holding {ticker_upper}")
 
     name = data.name or COMMON_TICKERS.get(ticker_upper, ticker_upper)
@@ -71,6 +73,7 @@ async def add_holding(user_id: int, data: HoldingCreate, db: AsyncSession = Depe
     db.add(holding)
     await db.commit()
     await db.refresh(holding)
+    logger.info(f"Added holding: user={user_id}, ticker={ticker_upper}")
     return holding
 
 
@@ -112,4 +115,5 @@ async def delete_holding(user_id: int, holding_id: int, db: AsyncSession = Depen
         raise HTTPException(status_code=404, detail="Holding not found")
     await db.delete(holding)
     await db.commit()
+    logger.info(f"Deleted holding: user={user_id}, ticker={holding.ticker}")
     return {"detail": "Holding deleted"}

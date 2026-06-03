@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,20 +13,23 @@ from app.routes_news import router as news_router
 from app.ingestion import ingest_feeds, cleanup_old_items
 from app.config import settings
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 scheduler = AsyncIOScheduler()
 
 
 async def scheduled_ingest():
     async with async_session() as db:
         stats = await ingest_feeds(db)
-        print(f"Ingestion complete: {stats}")
+        logger.info(f"Ingestion complete: {stats}")
 
 
 async def scheduled_cleanup():
     async with async_session() as db:
         deleted = await cleanup_old_items(db)
         if deleted:
-            print(f"Cleaned up {deleted} old news items")
+            logger.info(f"Cleaned up {deleted} old news items")
 
 
 @asynccontextmanager

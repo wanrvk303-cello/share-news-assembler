@@ -96,15 +96,21 @@ async function addHolding(ticker, name) {
         document.getElementById('searchResults').style.display = 'none';
         await loadHoldings();
         if (currentView === 'stock') populateStockSelect();
+        showToast(`Added ${ticker} to holdings`);
     } catch (e) {
-        alert(e.message);
+        showToast(e.message, 'error');
     }
 }
 
 async function removeHolding(id) {
-    await api(`/users/${currentUserId}/holdings/${id}`, 'DELETE');
-    await loadHoldings();
-    if (currentView === 'stock') populateStockSelect();
+    try {
+        await api(`/users/${currentUserId}/holdings/${id}`, 'DELETE');
+        await loadHoldings();
+        if (currentView === 'stock') populateStockSelect();
+        showToast('Removed holding');
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 }
 
 function viewStock(ticker) {
@@ -202,8 +208,10 @@ async function triggerIngest() {
     btn.disabled = true;
     try {
         const stats = await api('/ingest', 'POST');
-        alert(`Ingested: ${stats.new} new, ${stats.duplicates} duplicates, ${stats.errors} errors`);
+        showToast(`Ingested: ${stats.new} new, ${stats.duplicates} duplicates`);
         loadNews();
+    } catch (e) {
+        showToast('Refresh failed', 'error');
     } finally {
         btn.textContent = 'Refresh Feeds';
         btn.disabled = false;
@@ -223,6 +231,15 @@ function formatDate(iso) {
     if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
     if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
     return d.toLocaleDateString();
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.backgroundColor = type === 'error' ? 'var(--danger)' : 'var(--success)';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
 }
 
 document.addEventListener('click', (e) => {

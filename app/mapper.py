@@ -1,6 +1,9 @@
+import logging
 import re
 from difflib import SequenceMatcher
 from app.tickers import COMMON_TICKERS
+
+logger = logging.getLogger(__name__)
 
 
 def extract_tickers_from_text(text: str) -> list[dict]:
@@ -25,6 +28,8 @@ def extract_tickers_from_text(text: str) -> list[dict]:
                 conf = 90 if name_upper in text_upper else 70
                 found.append({"ticker": ticker, "confidence": conf})
 
+    if found:
+        logger.debug(f"Extracted tickers: {[t['ticker'] for t in found]}")
     return found
 
 

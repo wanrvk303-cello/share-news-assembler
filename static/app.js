@@ -2,12 +2,19 @@ const API = '/api';
 let currentView = 'personal';
 let currentPage = 1;
 let currentUserId = null;
+let isLoading = false;
 
 async function init() {
-    const user = await api('/users', 'POST', { username: 'default' });
-    currentUserId = user.id;
-    await loadHoldings();
-    loadNews();
+    try {
+        const user = await api('/users', 'POST', { username: 'default' });
+        currentUserId = user.id;
+        await loadHoldings();
+        loadNews();
+    } catch (e) {
+        console.error('Init failed:', e);
+        document.getElementById('newsContainer').innerHTML =
+            '<div class="empty-state"><h3>Connection Error</h3><p>Unable to connect to server</p></div>';
+    }
 }
 
 async function api(path, method = 'GET', body = null) {
@@ -106,27 +113,36 @@ function viewStock(ticker) {
 }
 
 async function loadNews() {
+    if (isLoading) return;
+    isLoading = true;
     const container = document.getElementById('newsContainer');
     container.innerHTML = '<div class="loading">Loading news...</div>';
 
-    const age = document.getElementById('ageFilter').value;
-    let url;
+    try {
+        const age = document.getElementById('ageFilter').value;
+        let url;
 
-    if (currentView === 'personal') {
-        url = `/news/personal/${currentUserId}?age_filter=${age}&page=${currentPage}&page_size=20`;
-    } else if (currentView === 'stock') {
-        const ticker = document.getElementById('stockSelect').value;
-        if (!ticker) {
-            container.innerHTML = '<div class="empty-state"><h3>Select a stock</h3><p>Choose a stock from the dropdown or your holdings</p></div>';
-            return;
+        if (currentView === 'personal') {
+            url = `/news/personal/${currentUserId}?age_filter=${age}&page=${currentPage}&page_size=20`;
+        } else if (currentView === 'stock') {
+            const ticker = document.getElementById('stockSelect').value;
+            if (!ticker) {
+                container.innerHTML = '<div class="empty-state"><h3>Select a stock</h3><p>Choose a stock from the dropdown or your holdings</p></div>';
+                isLoading = false;
+                return;
+            }
+            url = `/news/stock/${ticker}?age_filter=${age}&page=${currentPage}&page_size=20`;
+        } else {
+            url = `/news/market?age_filter=${age}&page=${currentPage}&page_size=20`;
         }
-        url = `/news/stock/${ticker}?age_filter=${age}&page=${currentPage}&page_size=20`;
-    } else {
-        url = `/news/market?age_filter=${age}&page=${currentPage}&page_size=20`;
-    }
 
-    const data = await api(url);
-    renderNews(data);
+        const data = await api(url);
+        renderNews(data);
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state"><h3>Error loading news</h3><p>Please try again later</p></div>';
+    } finally {
+        isLoading = false;
+    }
 }
 
 function renderNews(data) {
@@ -213,6 +229,14 @@ document.addEventListener('click', (e) => {
     if (!e.target.closest('.stock-search')) {
         document.getElementById('searchResults').style.display = 'none';
     }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === '1') switchView('personal');
+    if (e.key === '2') switchView('stock');
+    if (e.key === '3') switchView('market');
+    if (e.key === 'r' || e.key === 'R') triggerIngest();
 });
 
 init();

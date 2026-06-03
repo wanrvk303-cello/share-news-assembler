@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,17 +9,20 @@ from app.schemas import UserCreate, UserResponse, HoldingCreate, HoldingResponse
 from app.tickers import COMMON_TICKERS
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/users", response_model=UserResponse)
 async def create_user(data: UserCreate, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(User).where(User.username == data.username))
     if existing.scalar_one_or_none():
+        logger.warning(f"Duplicate username attempt: {data.username}")
         raise HTTPException(status_code=409, detail="Username already exists")
     user = User(username=data.username)
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    logger.info(f"Created user: {user.id} ({user.username})")
     return user
 
 

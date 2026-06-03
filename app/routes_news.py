@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +9,16 @@ from app.models import NewsItem, NewsStockMapping, Holding
 from app.schemas import NewsItemResponse, NewsListResponse
 
 router = APIRouter()
+
+
+def _apply_age_filter(query, age_filter: str):
+    if age_filter == "24h":
+        cutoff = datetime.utcnow() - timedelta(hours=24)
+        query = query.where(NewsItem.created_at >= cutoff)
+    elif age_filter == "7d":
+        cutoff = datetime.utcnow() - timedelta(days=7)
+        query = query.where(NewsItem.created_at >= cutoff)
+    return query
 
 
 async def _get_news_with_tickers(db: AsyncSession, query, limit: int = 50, offset: int = 0):
@@ -57,16 +69,7 @@ async def get_personal_news(
     )
 
     query = select(NewsItem).where(NewsItem.id.in_(ticker_subquery))
-
-    if age_filter == "24h":
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(hours=24)
-        query = query.where(NewsItem.created_at >= cutoff)
-    elif age_filter == "7d":
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(days=7)
-        query = query.where(NewsItem.created_at >= cutoff)
-
+    query = _apply_age_filter(query, age_filter)
     query = query.order_by(NewsItem.created_at.desc())
 
     count_query = select(func.count()).select_from(query.subquery())
@@ -96,16 +99,7 @@ async def get_stock_news(
     )
 
     query = select(NewsItem).where(NewsItem.id.in_(ticker_subquery))
-
-    if age_filter == "24h":
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(hours=24)
-        query = query.where(NewsItem.created_at >= cutoff)
-    elif age_filter == "7d":
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(days=7)
-        query = query.where(NewsItem.created_at >= cutoff)
-
+    query = _apply_age_filter(query, age_filter)
     query = query.order_by(NewsItem.created_at.desc())
 
     count_query = select(func.count()).select_from(query.subquery())
@@ -126,16 +120,7 @@ async def get_market_news(
     db: AsyncSession = Depends(get_db),
 ):
     query = select(NewsItem).where(NewsItem.category == "market_wide")
-
-    if age_filter == "24h":
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(hours=24)
-        query = query.where(NewsItem.created_at >= cutoff)
-    elif age_filter == "7d":
-        from datetime import datetime, timedelta
-        cutoff = datetime.utcnow() - timedelta(days=7)
-        query = query.where(NewsItem.created_at >= cutoff)
-
+    query = _apply_age_filter(query, age_filter)
     query = query.order_by(NewsItem.created_at.desc())
 
     count_query = select(func.count()).select_from(query.subquery())

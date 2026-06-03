@@ -72,6 +72,7 @@ async def ingest_feeds(db: AsyncSession) -> dict:
         try:
             items = await fetch_and_parse_feed(feed_config)
             stats["fetched"] += len(items)
+            logger.info(f"Fetched {len(items)} items from {feed_config['name']}")
 
             for item in items:
                 if not item["title"] or not item["link"]:

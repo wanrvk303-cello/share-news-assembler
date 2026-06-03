@@ -34,4 +34,19 @@ FEED_SOURCES = [
         "url": "https://www.investing.com/rss/news.rss",
         "type": "market_wide",
     },
+    {
+        "name": "CNBC Economy",
+        "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258",
+        "type": "market_wide",
+    },
+    {
+        "name": "Fox Business",
+        "url": "https://moxie.foxbusiness.com/google-publisher/latest.xml",
+        "type": "market_wide",
+    },
+    {
+        "name": "MarketWatch Stocks",
+        "url": "https://feeds.marketwatch.com/marketwatch/marketpulse/",
+        "type": "stock_specific",
+    },
 ]

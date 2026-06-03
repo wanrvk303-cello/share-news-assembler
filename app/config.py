@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     NEWS_RETENTION_DAYS: int = 30
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
+    MAX_NEWS_PER_PAGE: int = 100
+    DEFAULT_NEWS_PER_PAGE: int = 20
+    CORS_ORIGINS: list[str] = ["*"]
 
     class Config:
         env_file = ".env"

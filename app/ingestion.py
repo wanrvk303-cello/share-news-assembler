@@ -1,4 +1,5 @@
 import hashlib
+import re
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -53,9 +54,6 @@ def _clean_html(html: str) -> str:
     clean = re.sub(r"<[^>]+>", "", html)
     clean = re.sub(r"\s+", " ", clean).strip()
     return clean
-
-
-import re
 
 
 def compute_dedupe_key(title: str, link: str) -> str:

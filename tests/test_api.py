@@ -229,3 +229,68 @@ async def test_market_news_pagination():
         data = res.json()
         assert data["page"] == 1
         assert data["page_size"] == 10
+
+
+@pytest.mark.asyncio
+async def test_stats_endpoint():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/stats")
+        assert res.status_code == 200
+        data = res.json()
+        assert "users" in data
+        assert "holdings" in data
+        assert "news_items" in data
+        assert "stock_mappings" in data
+
+
+@pytest.mark.asyncio
+async def test_create_multiple_users():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        await client.post("/api/users", json={"username": "mu1"})
+        await client.post("/api/users", json={"username": "mu2"})
+        res1 = await client.get("/api/users/1")
+        res2 = await client.get("/api/users/2")
+        assert res1.status_code == 200
+        assert res2.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_holding_update_nonexistent():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        user = (await client.post("/api/users", json={"username": "un1"})).json()
+        res = await client.put(
+            f"/api/users/{user['id']}/holdings/99999",
+            json={"name": "Test"}
+        )
+        assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_ticker_search_limit():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/tickers/search?q=A")
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data) <= 20
+
+
+@pytest.mark.asyncio
+async def test_news_age_filter_24h():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/news/market?age_filter=24h")
+        assert res.status_code == 200
+        assert "items" in res.json()
+
+
+@pytest.mark.asyncio
+async def test_news_age_filter_7d():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/news/market?age_filter=7d")
+        assert res.status_code == 200
+        assert "items" in res.json()

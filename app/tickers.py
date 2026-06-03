@@ -118,3 +118,20 @@ COMMON_TICKERS = {
 }
 
 US_EXCHANGE_TICKERS = list(COMMON_TICKERS.keys())
+
+
+def search_tickers(query: str, limit: int = 20) -> list[dict]:
+    """Search tickers by symbol or company name."""
+    query_upper = query.upper()
+    results = []
+    for ticker, name in COMMON_TICKERS.items():
+        if query_upper in ticker or query_upper in name.upper():
+            results.append({"ticker": ticker, "name": name})
+            if len(results) >= limit:
+                break
+    return results
+
+
+def get_ticker_name(ticker: str) -> str | None:
+    """Get company name for a ticker."""
+    return COMMON_TICKERS.get(ticker.upper())

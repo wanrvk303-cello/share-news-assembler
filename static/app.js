@@ -10,11 +10,7 @@ async function init() {
         try {
             user = await api('/users', 'POST', { username: 'default' });
         } catch (e) {
-            if (e.message.includes('already exists')) {
-                user = await api('/users/by-username/default');
-            } else {
-                throw e;
-            }
+            user = await api('/users/by-username/default');
         }
         currentUserId = user.id;
         await loadHoldings();
@@ -44,17 +40,24 @@ function switchView(view) {
     document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
     const stockSelect = document.getElementById('stockSelect');
+    const stockInput = document.getElementById('stockInput');
+    const stockGoBtn = document.getElementById('stockGoBtn');
     const titles = { personal: 'Personal News', stock: 'Per-Stock News', market: 'Market News' };
     document.getElementById('viewTitle').textContent = titles[view];
-    stockSelect.style.display = view === 'stock' ? 'block' : 'none';
 
-    if (view === 'stock') populateStockSelect();
+    const isStock = view === 'stock';
+    stockSelect.style.display = isStock ? 'block' : 'none';
+    stockInput.style.display = isStock ? 'block' : 'none';
+    stockGoBtn.style.display = isStock ? 'inline-block' : 'none';
+
+    if (isStock) populateStockSelect();
     loadNews();
 }
 
 function populateStockSelect() {
     const select = document.getElementById('stockSelect');
-    const current = select.value;
+    const input = document.getElementById('stockInput');
+    const current = select.value || input.value;
     select.innerHTML = '<option value="">Select stock...</option>';
     document.querySelectorAll('.holding-item').forEach(el => {
         const ticker = el.querySelector('.holding-ticker').textContent;
@@ -64,6 +67,7 @@ function populateStockSelect() {
         if (ticker === current) opt.selected = true;
         select.appendChild(opt);
     });
+    select.onchange = function() { input.value = this.value; loadNews(); };
 }
 
 async function loadHoldings() {
@@ -112,6 +116,7 @@ async function addHolding(ticker, name) {
 }
 
 async function removeHolding(id) {
+    if (!currentUserId) { showToast('User not initialized', 'error'); return; }
     try {
         await api(`/users/${currentUserId}/holdings/${id}`, 'DELETE');
         await loadHoldings();
@@ -124,7 +129,17 @@ async function removeHolding(id) {
 
 function viewStock(ticker) {
     document.getElementById('stockSelect').value = ticker;
+    document.getElementById('stockInput').value = ticker;
     switchView('stock');
+}
+
+function loadStockFromInput() {
+    const input = document.getElementById('stockInput');
+    const ticker = input.value.trim().toUpperCase();
+    if (ticker) {
+        document.getElementById('stockSelect').value = ticker;
+        loadNews();
+    }
 }
 
 async function loadNews() {
@@ -140,9 +155,9 @@ async function loadNews() {
         if (currentView === 'personal') {
             url = `/news/personal/${currentUserId}?age_filter=${age}&page=${currentPage}&page_size=20`;
         } else if (currentView === 'stock') {
-            const ticker = document.getElementById('stockSelect').value;
+            const ticker = document.getElementById('stockInput').value.trim().toUpperCase() || document.getElementById('stockSelect').value;
             if (!ticker) {
-                container.innerHTML = '<div class="empty-state"><h3>Select a stock</h3><p>Choose a stock from the dropdown or your holdings</p></div>';
+                container.innerHTML = '<div class="empty-state"><h3>Select a stock</h3><p>Type a ticker (e.g. AAPL) or choose from holdings</p></div>';
                 isLoading = false;
                 return;
             }

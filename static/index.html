@@ -45,6 +45,8 @@
                     <select id="stockSelect" style="display:none" onchange="loadNews()">
                         <option value="">Select stock...</option>
                     </select>
+                    <input type="text" id="stockInput" style="display:none" placeholder="Type ticker (e.g. AAPL)" onkeydown="if(event.key==='Enter'){loadStockFromInput()}">
+                    <button class="btn btn-sm" id="stockGoBtn" style="display:none" onclick="loadStockFromInput()">Go</button>
                     <button class="btn btn-secondary" onclick="triggerIngest()">Refresh Feeds</button>
                 </div>
             </div>

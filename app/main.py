@@ -3,6 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -50,6 +51,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(holdings_router, prefix="/api")
 app.include_router(news_router, prefix="/api")
 
@@ -59,6 +68,11 @@ async def trigger_ingest():
     async with async_session() as db:
         stats = await ingest_feeds(db)
         return stats
+
+
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy", "version": "1.0.0"}
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

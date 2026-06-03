@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import re
 from datetime import datetime, timedelta
 from typing import Optional
@@ -11,6 +12,8 @@ from app.models import NewsItem, NewsStockMapping
 from app.feeds import FEED_SOURCES
 from app.mapper import extract_tickers_from_text, classify_item
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 async def fetch_and_parse_feed(feed_config: dict) -> list[dict]:
@@ -46,7 +49,7 @@ async def fetch_and_parse_feed(feed_config: dict) -> list[dict]:
             })
         return items
     except Exception as e:
-        print(f"Error fetching feed {feed_config['name']}: {e}")
+        logger.error(f"Error fetching feed {feed_config['name']}: {e}")
         return []
 
 
@@ -111,7 +114,7 @@ async def ingest_feeds(db: AsyncSession) -> dict:
 
         except Exception as e:
             stats["errors"] += 1
-            print(f"Error processing feed {feed_config['name']}: {e}")
+            logger.error(f"Error processing feed {feed_config['name']}: {e}")
             await db.rollback()
 
     return stats

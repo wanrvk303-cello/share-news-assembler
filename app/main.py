@@ -75,6 +75,24 @@ async def health_check():
     return {"status": "healthy", "version": "1.0.0"}
 
 
+@app.get("/api/stats")
+async def get_stats():
+    from sqlalchemy import select, func
+    from app.models import User, Holding, NewsItem, NewsStockMapping
+
+    async with async_session() as db:
+        users = (await db.execute(select(func.count(User.id)))).scalar()
+        holdings = (await db.execute(select(func.count(Holding.id)))).scalar()
+        news = (await db.execute(select(func.count(NewsItem.id)))).scalar()
+        mappings = (await db.execute(select(func.count(NewsStockMapping.id)))).scalar()
+        return {
+            "users": users,
+            "holdings": holdings,
+            "news_items": news,
+            "stock_mappings": mappings,
+        }
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 

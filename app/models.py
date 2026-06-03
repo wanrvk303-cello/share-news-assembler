@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -28,6 +28,8 @@ class Holding(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "ticker", name="uq_user_ticker"),
+        Index("ix_holding_user", "user_id"),
+        Index("ix_holding_ticker", "ticker"),
     )
 
 
@@ -45,6 +47,11 @@ class NewsItem(Base):
 
     mappings = relationship("NewsStockMapping", back_populates="news_item", cascade="all, delete-orphan")
 
+    __table_args__ = (
+        Index("ix_news_category", "category"),
+        Index("ix_news_created", "created_at"),
+    )
+
 
 class NewsStockMapping(Base):
     __tablename__ = "news_stock_mappings"
@@ -58,4 +65,6 @@ class NewsStockMapping(Base):
 
     __table_args__ = (
         UniqueConstraint("news_id", "ticker", name="uq_news_ticker"),
+        Index("ix_mapping_news", "news_id"),
+        Index("ix_mapping_ticker", "ticker"),
     )

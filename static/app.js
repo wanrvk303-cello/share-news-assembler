@@ -6,7 +6,16 @@ let isLoading = false;
 
 async function init() {
     try {
-        const user = await api('/users', 'POST', { username: 'default' });
+        let user;
+        try {
+            user = await api('/users', 'POST', { username: 'default' });
+        } catch (e) {
+            if (e.message.includes('already exists')) {
+                user = await api('/users/by-username/default');
+            } else {
+                throw e;
+            }
+        }
         currentUserId = user.id;
         await loadHoldings();
         loadNews();

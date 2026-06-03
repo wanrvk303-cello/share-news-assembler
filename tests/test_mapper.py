@@ -36,9 +36,27 @@ def test_classify_stock_specific():
 
 
 def test_extract_fuzzy_name():
-    result = extract_tickers_from_text("The company NVIDIA Corporation announced new chips")
+    result = extract_tickers_from_text("The company NVIDIA announced new chips")
     tickers = [t["ticker"] for t in result]
     assert "NVDA" in tickers
+
+
+def test_extract_short_name_apple():
+    result = extract_tickers_from_text("Apple reported strong iPhone sales")
+    tickers = [t["ticker"] for t in result]
+    assert "AAPL" in tickers
+
+
+def test_extract_short_name_google():
+    result = extract_tickers_from_text("Google Cloud revenue grew 30%")
+    tickers = [t["ticker"] for t in result]
+    assert "GOOGL" in tickers
+
+
+def test_extract_short_name_facebook():
+    result = extract_tickers_from_text("Facebook parent Meta reported earnings")
+    tickers = [t["ticker"] for t in result]
+    assert "META" in tickers
 
 
 def test_extract_empty_text():

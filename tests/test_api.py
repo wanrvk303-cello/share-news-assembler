@@ -154,3 +154,78 @@ async def test_holding_not_found():
         user = (await client.post("/api/users", json={"username": "nf1"})).json()
         res = await client.delete(f"/api/users/{user['id']}/holdings/99999")
         assert res.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_health_check():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/health")
+        assert res.status_code == 200
+        assert res.json()["status"] == "healthy"
+
+
+@pytest.mark.asyncio
+async def test_ticker_search_empty():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/tickers/search?q=ZZZZZ")
+        assert res.status_code == 200
+        assert len(res.json()) == 0
+
+
+@pytest.mark.asyncio
+async def test_ticker_search_partial():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/tickers/search?q=APP")
+        assert res.status_code == 200
+        data = res.json()
+        assert any(t["ticker"] == "AAPL" for t in data)
+
+
+@pytest.mark.asyncio
+async def test_holding_update_name_only():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        user = (await client.post("/api/users", json={"username": "u2"})).json()
+        holding = (await client.post(f"/api/users/{user['id']}/holdings", json={"ticker": "MSFT"})).json()
+        original_ticker = holding["ticker"]
+        res = await client.put(
+            f"/api/users/{user['id']}/holdings/{holding['id']}",
+            json={"name": "My Microsoft"}
+        )
+        assert res.status_code == 200
+        assert res.json()["ticker"] == original_ticker
+        assert res.json()["name"] == "My Microsoft"
+
+
+@pytest.mark.asyncio
+async def test_personal_news_with_holdings():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        user = (await client.post("/api/users", json={"username": "pn1"})).json()
+        await client.post(f"/api/users/{user['id']}/holdings", json={"ticker": "AAPL"})
+        res = await client.get(f"/api/news/personal/{user['id']}")
+        assert res.status_code == 200
+        assert "items" in res.json()
+
+
+@pytest.mark.asyncio
+async def test_stock_news_with_ticker():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/news/stock/AAPL")
+        assert res.status_code == 200
+        assert "items" in res.json()
+
+
+@pytest.mark.asyncio
+async def test_market_news_pagination():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.get("/api/news/market?page=1&page_size=10")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["page"] == 1
+        assert data["page_size"] == 10
